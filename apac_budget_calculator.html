@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APAC Budget Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F6FA;--surface:#fff;--surface2:#F0F3F8;--border:#E1E6EF;
+  --accent:#1A56DB;--accent-light:#EBF2FF;--accent-mid:#BFDBFE;
+  --text:#0D1B2E;--muted:#64748B;--faint:#94A3B8;
+  --green:#059669;--green-bg:#ECFDF5;--green-mid:#A7F3D0;
+  --amber:#B45309;--amber-bg:#FFFBEB;--amber-mid:#FDE68A;
+  --red:#DC2626;--red-bg:#FEF2F2;
+  --purple:#7C3AED;--purple-bg:#F5F3FF;
+  --r:8px;--rs:5px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 16px rgba(0,0,0,.10);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#1A56DB,#7C3AED);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
+.logo-name{font-weight:700;font-size:15px;letter-spacing:-.2px}
+.logo-sub{font-size:11px;color:var(--faint)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--accent-mid)}
+.progress-pill{background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid var(--green-mid);display:none}
+.progress-pill.show{display:inline-flex;align-items:center;gap:5px}
+
+/* NAV TABS */
+.nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;gap:0}
+.ntab{padding:13px 18px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;gap:6px}
+.ntab:hover{color:var(--text)}
+.ntab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.ntab .nbadge{background:var(--surface2);color:var(--faint);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+.ntab.active .nbadge{background:var(--accent-light);color:var(--accent)}
+
+main{max-width:920px;margin:0 auto;padding:28px 24px}
+
+/* STEP BAR */
+.stepbar{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px;margin-bottom:28px;box-shadow:var(--sh)}
+.st{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--faint);transition:all .15s}
+.st.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.3)}
+.st.done{color:var(--green)}
+.stn{width:19px;height:19px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.st.active .stn{background:rgba(255,255,255,.25);color:#fff}
+.st.done .stn{background:var(--green);color:#fff}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:16px}
+.card-hd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.card-title{font-weight:600;font-size:14px}
+.card-sub{font-size:11px;color:var(--faint);margin-top:1px}
+.card-body{padding:22px}
+
+/* FORM */
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.fgroup{display:flex;flex-direction:column;gap:5px}
+.fgroup.full{grid-column:1/-1}
+.fgroup.half{grid-column:span 2}
+label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+select,input[type=text],input[type=number],textarea{border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-family:inherit;font-size:13px;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s;outline:none;width:100%}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+textarea{resize:vertical}
+
+/* CAT TABS */
+.cat-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:20px}
+.ctab{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;color:var(--muted);display:flex;align-items:center;gap:5px}
+.ctab:hover{border-color:var(--accent-mid);color:var(--accent)}
+.ctab.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent);font-weight:600}
+.ctab.filled{border-color:var(--green);color:var(--green)}
+.ctab .dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:none}
+.ctab.filled:not(.active) .dot{display:inline-block}
+
+/* OFFICE ROWS */
+.office-list{display:flex;flex-direction:column}
+.office-row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--border)}
+.office-row:last-child{border-bottom:none}
+.office-name{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;width:145px;flex-shrink:0}
+.office-flag{font-size:17px}
+.lock-note{font-size:10px;color:var(--faint);font-style:italic;flex:1}
+.amt-cell{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex:1}
+.amt-row{display:flex;align-items:center;gap:6px}
+.curr{font-size:12px;color:var(--muted);font-weight:500}
+.amt-input{width:110px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;text-align:right}
+.suggested{font-size:10px;color:var(--faint);font-style:italic}
+.remark-tag{font-size:10px;color:var(--amber);font-weight:500;font-style:normal}
+.toggle{width:34px;height:18px;border-radius:9px;background:var(--border);position:relative;cursor:pointer;border:none;transition:background .15s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(16px)}
+.cat-total-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 4px 0;border-top:2px solid var(--border);margin-top:4px}
+.cat-total-label{font-size:11px;color:var(--muted);font-weight:500}
+.cat-total-val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;color:var(--accent)}
+
+/* ANNIVERSARY PASTE */
+.paste-area{width:100%;min-height:130px;font-family:'JetBrains Mono',monospace;font-size:11px;border:1.5px dashed var(--border);border-radius:var(--rs);padding:12px;resize:vertical;background:var(--surface2);color:var(--text)}
+.paste-area:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(26,86,219,.08);outline:none}
+.anniv-results{margin-top:14px;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.anniv-office-row{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.anniv-office-row:last-child{border-bottom:none}
+.anniv-office-name{font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px;min-width:110px}
+.anniv-people{flex:1;display:flex;flex-direction:column;gap:2px}
+.anniv-person{font-size:11px;color:var(--muted)}
+.anniv-person.skipped{color:var(--faint);text-decoration:line-through}
+.anniv-amount{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--accent);white-space:nowrap}
+
+/* ═══ TRACKER TABLE ═══ */
+.tracker-wrap{overflow-x:auto}
+.tracker-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.tracker-progress{display:flex;align-items:center;gap:12px}
+.prog-bar-wrap{width:160px;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.prog-bar-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s}
+.prog-label{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+
+.tracker-table{width:100%;border-collapse:collapse;font-size:12px}
+.tracker-table th{text-align:left;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.tracker-table td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tracker-table tr.shared-row{background:var(--green-bg)}
+.tracker-table tr.shared-row td{color:var(--green)}
+.tracker-table tr.cat-group-row td{background:var(--surface2);font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:6px 10px}
+
+/* Checkbox */
+.check-wrap{display:flex;align-items:center;justify-content:center}
+.checker{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.checker:hover{border-color:var(--green)}
+.checker.checked{background:var(--green);border-color:var(--green)}
+.checker.checked::after{content:'✓';color:#fff;font-size:12px;font-weight:700;line-height:1}
+
+/* Recipient input in tracker */
+.recip-input{border:1px solid var(--border);border-radius:var(--rs);padding:5px 8px;font-family:inherit;font-size:12px;width:120px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+.recip-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(26,86,219,.08)}
+.recip-input:disabled{background:var(--surface2);color:var(--muted);cursor:default;border-color:transparent}
+.recip-input.manual{border-style:dashed}
+
+/* Amount display */
+.mono{font-family:'JetBrains Mono',monospace;font-weight:500}
+.amt-shared{color:var(--green);font-weight:600}
+
+/* Status badge */
+.sbadge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.03em;white-space:nowrap}
+.sbadge.pending{background:var(--surface2);color:var(--faint)}
+.sbadge.shared{background:var(--green-bg);color:var(--green)}
+
+/* Summary totals */
+.sum-totals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.sum-card-label{font-size:11px;color:var(--faint);font-weight:500;margin-bottom:4px}
+.sum-card-val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px}
+.sum-card-val.green{color:var(--green)}
+.sum-card-val.amber{color:var(--amber)}
+
+/* EMAIL */
+.email-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.email-toolbar{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
+.email-toolbar-lbl{font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em}
+.email-body{padding:24px;font-size:12.5px;line-height:1.8;white-space:pre-wrap;font-family:'Inter',sans-serif;min-height:260px;outline:none}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--rs);border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(26,86,219,.25)}
+.btn-primary:hover{background:#1547C0;transform:translateY(-1px)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--surface2)}
+.btn-ghost{background:transparent;color:var(--accent);border:1px solid var(--accent-mid)}
+.btn-ghost:hover{background:var(--accent-light)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#047857}
+.btn-sm{padding:6px 13px;font-size:11px}
+.actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.actions-between{display:flex;gap:8px;margin-top:20px;justify-content:space-between}
+
+/* HINT BOX */
+.hint-box{background:var(--amber-bg);border:1px solid var(--amber-mid);border-radius:var(--rs);padding:10px 14px;font-size:11px;color:var(--amber);display:flex;gap:8px;line-height:1.6;margin-bottom:14px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;border-radius:30px;font-size:12px;font-weight:600;box-shadow:var(--sh2);transition:transform .25s cubic-bezier(.34,1.56,.64,1);z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* PAGE VIEWS */
+.page{display:none}.page.active{display:block}
+
+@media(max-width:680px){
+  .fgrid{grid-template-columns:1fr 1fr}
+  main{padding:16px}
+  header{padding:11px 16px}
+  .st span:not(.stn){display:none}
+  .office-name{width:110px}
+  .sum-totals{grid-template-columns:1fr}
+  .nav-tabs{padding:0 12px}
+  .ntab{padding:11px 10px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">WX</div>
+    <div>
+      <div class="logo-name">APAC Budget Tracker</div>
+      <div class="logo-sub">Monthly Budget Request & Transfer Tracker</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span class="progress-pill" id="progressPill">0 / 0 shared</span>
+    <span class="hdr-badge">8 APAC Offices</span>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="ntab active" onclick="showPage('builder')" id="ntab-builder">📋 Budget Builder</button>
+  <button class="ntab" onclick="showPage('tracker')" id="ntab-tracker">✅ Sharing Tracker <span class="nbadge" id="tracker-badge">—</span></button>
+  <button class="ntab" onclick="showPage('email')" id="ntab-email">✉️ Email Draft</button>
+</nav>
+
+<main>
+
+<!-- ═══════════ PAGE: BUILDER ═══════════ -->
+<div class="page active" id="page-builder">
+  <div class="stepbar">
+    <button class="st active" onclick="goStep(1)" id="tab1"><span class="stn">1</span><span>Setup</span></button>
+    <button class="st" onclick="goStep(2)" id="tab2"><span class="stn">2</span><span>By Category</span></button>
+    <button class="st" onclick="goStep(3)" id="tab3"><span class="stn">3</span><span>Summary</span></button>
+  </div>
+
+  <!-- Step 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:#EBF2FF">📋</div>
+        <div><div class="card-title">Request Setup</div><div class="card-sub">Global details for this monthly submission</div></div>
+      </div>
+      <div class="card-body">
+        <div class="fgrid">
+          <div class="fgroup">
+            <label>Request Month</label>
+            <input type="text" id="reqMonth" placeholder="e.g. July 2026" />
+          </div>
+          <div class="fgroup">
+            <label>Submitted by</label>
+            <input type="text" id="submittedBy" value="Surinya" />
+          </div>
+          <div class="fgroup">
+            <label>Recipient (To)</label>
+            <input type="text" id="recipient" value="Custodia" />
+          </div>
+          <div class="fgroup full">
+            <label>Special notes (optional)</label>
+            <textarea id="specialNotes" placeholder="e.g. Company anniversary in Bangkok, public holidays…" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="goStep(2)">Set Budget by Category →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div id="step2" style="display:none">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:#ECFDF5">💰</div>
+        <div><div class="card-title">Budget by Category</div><div class="card-sub">Select a category — toggle offices and adjust amounts</div></div>
+      </div>
+      <div class="card-body">
+        <div class="cat-tabs" id="catTabs"></div>
+        <div id="catPanel"></div>
+      </div>
+    </div>
+    <div class="actions-between">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Review Summary →</button>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div id="step3" style="display:none">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon" style="background:#FFFBEB">📊</div>
+        <div><div class="card-title">Budget Summary</div><div class="card-sub">Confirm totals — then open the Sharing Tracker or Email Draft</div></div>
+      </div>
+      <div class="card-body">
+        <div id="summaryContent"></div>
+      </div>
+    </div>
+    <div class="actions-between">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Edit Budgets</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="openTracker()">✅ Open Sharing Tracker</button>
+        <button class="btn btn-primary" onclick="showPage('email');renderEmail()">✉️ Generate Email</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE: TRACKER ═══════════ -->
+<div class="page" id="page-tracker">
+  <div id="trackerContent">
+    <div style="text-align:center;padding:60px 20px;color:var(--faint)">
+      <div style="font-size:40px;margin-bottom:12px">✅</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:6px">Sharing Tracker</div>
+      <div style="font-size:12px">Complete the Budget Builder first, then click "Open Sharing Tracker"</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE: EMAIL ═══════════ -->
+<div class="page" id="page-email">
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-icon" style="background:#F5F3FF">✉️</div>
+      <div><div class="card-title">Email Draft</div><div class="card-sub">One combined email to Custodia — click to edit before sending</div></div>
+    </div>
+    <div class="card-body">
+      <div class="email-wrap">
+        <div class="email-toolbar">
+          <span class="email-toolbar-lbl">✉️ Click anywhere to edit</span>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-ghost btn-sm" onclick="copyEmail()">📋 Copy</button>
+            <button class="btn btn-green btn-sm" onclick="openMail()">📨 Open in Mail</button>
+          </div>
+        </div>
+        <div class="email-body" id="emailBody" contenteditable="true" spellcheck="true"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="showPage('builder')">← Back to Builder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+
+const OFFICES = [
+  { id:'bangkok',  name:'Bangkok',   short:'TH',  flag:'🇹🇭' },
+  { id:'sydney',   name:'Sydney',    short:'AUS', flag:'🇦🇺' },
+  { id:'hongkong', name:'Hong Kong', short:'HKG', flag:'🇭🇰' },
+  { id:'shenzhen', name:'Shenzhen',  short:'SZX', flag:'🇨🇳' },
+  { id:'beijing',  name:'Beijing',   short:'PEK', flag:'🇨🇳' },
+  { id:'taipei',   name:'Taipei',    short:'TWN', flag:'🇹🇼' },
+  { id:'seoul',    name:'Seoul',     short:'KOR', flag:'🇰🇷' },
+  { id:'tokyo',    name:'Tokyo',     short:'JPN', flag:'🇯🇵' },
+];
+
+// CATS in email/tracker order
+const CATS = [
+  { id:'anniversary',    emoji:'🎁', name:'Anniversary Gifts',  special:'anniversary' },
+  { id:'sport',          emoji:'🏃', name:'Sport & Wellness' },
+  { id:'parking',        emoji:'🅿️', name:'Parking',            special:'parking' },
+  { id:'office_supply',  emoji:'🖊️', name:'Office Supply' },
+  { id:'kitchen',        emoji:'☕', name:'Kitchen' },
+  { id:'happy_hour',     emoji:'🥂', name:'Happy Hour' },
+  { id:'company_events', emoji:'🎉', name:'Company Events' },
+];
+
+const DEFAULTS = {
+  anniversary:    { bangkok:0,   sydney:0,   hongkong:0,   shenzhen:0,   beijing:0,   taipei:0,    seoul:0,   tokyo:0   },
+  sport:          { bangkok:0,   sydney:300, hongkong:300, shenzhen:300, beijing:0,   taipei:0,    seoul:300, tokyo:0   },
+  parking:        { bangkok:0,   sydney:0,   hongkong:0,   shenzhen:0,   beijing:0,   taipei:400,  seoul:0,   tokyo:0   },
+  office_supply:  { bangkok:300, sydney:150, hongkong:150, shenzhen:200, beijing:150, taipei:450,  seoul:150, tokyo:300 },
+  kitchen:        { bangkok:500, sydney:300, hongkong:300, shenzhen:300, beijing:0,   taipei:0,    seoul:0,   tokyo:300 },
+  happy_hour:     { bangkok:1000,sydney:700, hongkong:300, shenzhen:300, beijing:630, taipei:1000, seoul:450, tokyo:700 },
+  company_events: { bangkok:0,   sydney:0,   hongkong:0,   shenzhen:0,   beijing:0,   taipei:0,    seoul:0,   tokyo:0   },
+};
+
+const OFFICE_SUPPLY_REMARKS = { shenzhen: 'including cleaning' };
+const KITCHEN_SKIP  = ['beijing','taipei','seoul'];
+const PARKING_ONLY  = ['taipei'];
+
+// Default recipients per office per category
+// anniversary & sport = manual (null = editable blank)
+// parking = Andy fixed
+// others = fixed per office
+const DEFAULT_RECIPIENTS = {
+  sydney:   { office_supply:'Adam',    kitchen:'Adam',    happy_hour:'Adam',    company_events:'Adam',    parking:null,  anniversary:null, sport:'Adam' },
+  taipei:   { office_supply:'Andy',    kitchen:'Andy',    happy_hour:'Andy',    company_events:'Andy',    parking:'Andy', anniversary:null, sport:null },
+  hongkong: { office_supply:'Mary',    kitchen:'Mary',    happy_hour:'Mary',    company_events:'Mary',    parking:null,  anniversary:null, sport:null },
+  bangkok:  { office_supply:'Surinya', kitchen:'Surinya', happy_hour:'Surinya', company_events:'Surinya', parking:null,  anniversary:null, sport:null },
+  tokyo:    { office_supply:'Surinya', kitchen:'Surinya', happy_hour:'Surinya', company_events:'Surinya', parking:null,  anniversary:null, sport:null },
+  seoul:    { office_supply:'Surinya', kitchen:'Surinya', happy_hour:'Surinya', company_events:'Surinya', parking:null,  anniversary:null, sport:null },
+  shenzhen: { office_supply:'Surinya', kitchen:'Surinya', happy_hour:'Surinya', company_events:'Surinya', parking:null,  anniversary:null, sport:null },
+  beijing:  { office_supply:'Surinya', kitchen:'Surinya', happy_hour:'Surinya', company_events:'Surinya', parking:null,  anniversary:null, sport:null },
+};
+
+// Categories where recipient cannot forward after receiving (must receive only)
+const NO_FORWARD_CATS = ['anniversary','sport'];
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+
+const budgets = {};
+OFFICES.forEach(o => {
+  budgets[o.id] = {};
+  CATS.forEach(c => {
+    const def = DEFAULTS[c.id][o.id];
+    const kitchenSkip = c.id==='kitchen' && KITCHEN_SKIP.includes(o.id);
+    const parkingSkip = c.id==='parking' && !PARKING_ONLY.includes(o.id);
+    budgets[o.id][c.id] = { enabled: !kitchenSkip && !parkingSkip && def > 0, amount: def };
+  });
+});
+
+let anniversaryData = {};
+let currentCat = 'anniversary';
+let currentStep = 1;
+let trackerReady = false;
+
+// Tracker state: { lineKey: { shared, recipient } }
+// lineKey = officeId + '__' + catId
+const trackerState = {};
+
+const LOC_MAP = {
+  'bangkok':'bangkok','thailand':'bangkok','th':'bangkok',
+  'sydney':'sydney','australia':'sydney','aus':'sydney',
+  'hong kong':'hongkong','hongkong':'hongkong','hkg':'hongkong',
+  'shenzhen':'shenzhen','szx':'shenzhen',
+  'beijing':'beijing','pek':'beijing',
+  'taipei':'taipei','taiwan':'taipei','twn':'taipei',
+  'seoul':'seoul','korea':'seoul','kor':'seoul',
+  'tokyo':'tokyo','japan':'tokyo','jpn':'tokyo',
+};
+
+// ═══════════════════════════════════════════════════
+// PAGE NAV
+// ═══════════════════════════════════════════════════
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('ntab-'+id).classList.add('active');
+  if (id === 'email') renderEmail();
+}
+
+function openTracker() {
+  buildTrackerLines();
+  showPage('tracker');
+}
+
+// ═══════════════════════════════════════════════════
+// BUILDER STEPS
+// ═══════════════════════════════════════════════════
+
+function goStep(n) {
+  if (n > 1) {
+    const month = document.getElementById('reqMonth').value.trim();
+    if (!month) { showToast('⚠️ Please enter the request month'); return; }
+  }
+  if (n === 2) renderCatTabs();
+  if (n === 3) renderSummary();
+  currentStep = n;
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+    const tab = document.getElementById('tab'+i);
+    tab.className = 'st' + (i===n?' active':i<n?' done':'');
+    tab.querySelector('.stn').textContent = i < n ? '✓' : i;
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════════
+// CATEGORY BUILDER
+// ═══════════════════════════════════════════════════
+
+function renderCatTabs() {
+  document.getElementById('catTabs').innerHTML = CATS.map(c => {
+    const total = catTotal(c.id);
+    return `<button class="ctab ${c.id===currentCat?'active':''} ${total>0?'filled':''}" onclick="switchCat('${c.id}')" id="ctab_${c.id}">
+      <span class="dot"></span>${c.emoji} ${c.name}
+    </button>`;
+  }).join('');
+  renderCatPanel(currentCat);
+}
+
+function switchCat(id) {
+  currentCat = id;
+  document.querySelectorAll('.ctab').forEach(t => {
+    const cid = t.id.replace('ctab_','');
+    t.className = 'ctab' + (cid===id?' active':'') + (catTotal(cid)>0?' filled':'');
+  });
+  renderCatPanel(id);
+}
+
+function catTotal(cid) {
+  return OFFICES.reduce((s,o) => s + (budgets[o.id][cid].enabled ? (budgets[o.id][cid].amount||0) : 0), 0);
+}
+
+function renderCatPanel(cid) {
+  if (cid === 'anniversary') { renderAnniversaryPanel(); return; }
+  if (cid === 'parking')     { renderParkingPanel(); return; }
+
+  const rows = OFFICES.map(o => {
+    const s = budgets[o.id][cid];
+    const def = DEFAULTS[cid][o.id];
+    const skip = cid === 'kitchen' && KITCHEN_SKIP.includes(o.id);
+    const remark = cid==='office_supply' && OFFICE_SUPPLY_REMARKS[o.id]
+      ? `<div class="remark-tag">📝 ${OFFICE_SUPPLY_REMARKS[o.id]}</div>` : '';
+    return `<div class="office-row">
+      <div class="office-name"><span class="office-flag">${o.flag}</span>${o.name}</div>
+      ${skip
+        ? `<span class="lock-note">Not via Custodia</span>`
+        : `<button class="toggle ${s.enabled?'on':''}" id="tog_${o.id}_${cid}" onclick="toggleOffice('${o.id}','${cid}')"></button>
+           <div class="amt-cell">
+             <div class="amt-row">
+               <span class="curr">USD $</span>
+               <input type="number" class="amt-input" id="amt_${o.id}_${cid}" value="${s.amount}" min="0" step="50"
+                 oninput="liveAmt('${o.id}','${cid}',this.value)" ${!s.enabled?'disabled':''}/>
+             </div>
+             ${def>0?`<div class="suggested">Suggested: $${def}</div>`:''}
+             ${remark}
+           </div>`
+      }
+    </div>`;
+  }).join('');
+
+  document.getElementById('catPanel').innerHTML = `
+    <div class="office-list">${rows}</div>
+    <div class="cat-total-bar">
+      <span class="cat-total-label">Category total</span>
+      <span class="cat-total-val" id="cattotal_${cid}">$${catTotal(cid).toLocaleString()}</span>
+    </div>`;
+}
+
+function renderParkingPanel() {
+  document.getElementById('catPanel').innerHTML = `
+    <div class="hint-box">🅿️ <div><strong>Parking — Taipei only, fixed $400/month.</strong> Paid directly to Andy (Taipei). Appears as a separate line in the email.</div></div>
+    <div class="office-list">
+      ${OFFICES.map(o => {
+        const isTaipei = o.id==='taipei';
+        const s = budgets[o.id]['parking'];
+        return `<div class="office-row">
+          <div class="office-name"><span class="office-flag">${o.flag}</span>${o.name}</div>
+          ${isTaipei
+            ? `<span style="font-size:11px;color:var(--amber);font-weight:600;flex:1">Fixed — paid to Andy</span>
+               <div class="amt-cell"><div class="amt-row">
+                 <span class="curr">USD $</span>
+                 <input type="number" class="amt-input" id="amt_taipei_parking" value="${s.amount}" min="0" step="50"
+                   oninput="liveAmt('taipei','parking',this.value)"/>
+               </div></div>`
+            : `<span class="lock-note">Not applicable</span>`}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="cat-total-bar">
+      <span class="cat-total-label">Category total</span>
+      <span class="cat-total-val">$${catTotal('parking').toLocaleString()}</span>
+    </div>`;
+}
+
+function toggleOffice(oid, cid) {
+  budgets[oid][cid].enabled = !budgets[oid][cid].enabled;
+  const on = budgets[oid][cid].enabled;
+  const tog = document.getElementById('tog_'+oid+'_'+cid);
+  const inp = document.getElementById('amt_'+oid+'_'+cid);
+  if (tog) tog.className = 'toggle'+(on?' on':'');
+  if (inp) inp.disabled = !on;
+  refreshCatTotal(cid);
+  refreshCatTab(cid);
+}
+
+function liveAmt(oid, cid, val) {
+  budgets[oid][cid].amount = parseFloat(val)||0;
+  refreshCatTotal(cid);
+  refreshCatTab(cid);
+}
+
+function refreshCatTotal(cid) {
+  const el = document.getElementById('cattotal_'+cid);
+  if (el) el.textContent = '$'+catTotal(cid).toLocaleString();
+}
+
+function refreshCatTab(cid) {
+  const t = document.getElementById('ctab_'+cid);
+  if (t) t.className = 'ctab'+(cid===currentCat?' active':'')+(catTotal(cid)>0?' filled':'');
+}
+
+// ═══════════════════════════════════════════════════
+// ANNIVERSARY PANEL
+// ═══════════════════════════════════════════════════
+
+function renderAnniversaryPanel() {
+  const hasData = Object.keys(anniversaryData).length > 0;
+  document.getElementById('catPanel').innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+      Paste from Google Sheets (include header row). Rows with any text in <strong>Local Currency</strong> column are skipped.
+    </div>
+    <textarea class="paste-area" id="annivPaste" placeholder="Full Name&#9;Location&#9;Hire Date&#9;Years&#9;Gift Amount&#9;USD&#9;Local Currency"></textarea>
+    <div style="font-size:10px;color:var(--faint);margin-top:6px">Columns: Full Name | Location | Hire Date | Years | Gift Amount | USD | Local Currency</div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-primary btn-sm" onclick="parseAnniversary()">Calculate from paste</button>
+      ${hasData?`<button class="btn btn-secondary btn-sm" onclick="clearAnniversary()">Clear</button>`:''}
+    </div>
+    ${hasData ? renderAnniversaryResults() : ''}`;
+}
+
+function parseAnniversary() {
+  const raw = document.getElementById('annivPaste').value.trim();
+  if (!raw) { showToast('⚠️ Nothing pasted yet'); return; }
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  const dataLines = lines.filter(l => {
+    const cols = l.split('\t');
+    const first = (cols[0]||'').toLowerCase();
+    return first !== 'full name' && first !== 'name' && cols.length >= 5;
+  });
+  anniversaryData = {};
+  OFFICES.forEach(o => { anniversaryData[o.id] = { total:0, people:[] }; });
+  dataLines.forEach(line => {
+    const cols = line.split('\t');
+    const name = (cols[0]||'').trim();
+    const loc  = (cols[1]||'').trim().toLowerCase();
+    const amt  = parseFloat(cols[4])||0;
+    const lc   = (cols[6]||'').trim();
+    if (!name) return;
+    const oid = LOC_MAP[loc];
+    if (!oid) return;
+    const skip = lc.length > 0;
+    anniversaryData[oid].people.push({ name, amount:amt, skipped:skip, reason:lc });
+    if (!skip) anniversaryData[oid].total += amt;
+  });
+  OFFICES.forEach(o => {
+    const t = anniversaryData[o.id].total;
+    budgets[o.id].anniversary.amount = t;
+    budgets[o.id].anniversary.enabled = t > 0;
+  });
+  refreshCatTab('anniversary');
+  renderAnniversaryPanel();
+  showToast('✅ Anniversary totals calculated');
+}
+
+function renderAnniversaryResults() {
+  const officesWithData = OFFICES.filter(o => anniversaryData[o.id]?.people.length > 0);
+  if (!officesWithData.length) return '<div style="margin-top:14px;font-size:12px;color:var(--faint)">No matching rows found.</div>';
+  const rows = officesWithData.map(o => {
+    const d = anniversaryData[o.id];
+    return `<div class="anniv-office-row">
+      <div class="anniv-office-name">${o.flag} ${o.name}</div>
+      <div class="anniv-people">${d.people.map(p =>
+        `<div class="anniv-person ${p.skipped?'skipped':''}">${p.name} — $${p.amount}${p.skipped?` <span style="color:var(--faint)">(${p.reason})</span>`:''}</div>`
+      ).join('')}</div>
+      <div>${d.total>0?`<span class="anniv-amount">$${d.total.toLocaleString()}</span>`:`<span style="color:var(--faint);font-size:12px">$0</span>`}</div>
+    </div>`;
+  }).join('');
+  const grand = OFFICES.reduce((s,o)=>s+(anniversaryData[o.id]?.total||0),0);
+  return `<div class="anniv-results">${rows}</div>
+    <div class="cat-total-bar"><span class="cat-total-label">Anniversary total</span><span class="cat-total-val">$${grand.toLocaleString()}</span></div>`;
+}
+
+function clearAnniversary() {
+  anniversaryData = {};
+  OFFICES.forEach(o => { budgets[o.id].anniversary = { enabled:false, amount:0 }; });
+  refreshCatTab('anniversary');
+  renderAnniversaryPanel();
+}
+
+// ═══════════════════════════════════════════════════
+// SUMMARY (Step 3)
+// ═══════════════════════════════════════════════════
+
+function renderSummary() {
+  let html = '<div class="sum-wrap"><table class="tracker-table">';
+  html += '<thead><tr><th>Category / Office</th><th>Amount (USD)</th></tr></thead><tbody>';
+  let grand = 0;
+  CATS.forEach(c => {
+    const total = catTotal(c.id);
+    html += `<tr class="cat-group-row"><td colspan="2">${c.emoji} ${c.name}</td></tr>`;
+    OFFICES.forEach(o => {
+      const s = budgets[o.id][c.id];
+      const skip = (c.id==='kitchen'&&KITCHEN_SKIP.includes(o.id))||(c.id==='parking'&&!PARKING_ONLY.includes(o.id));
+      const amt = s.enabled && !skip ? (s.amount||0) : 0;
+      if (amt === 0) return;
+      html += `<tr><td style="padding-left:26px">${o.flag} ${o.name}</td><td class="mono">$${amt.toLocaleString()}</td></tr>`;
+    });
+    if (total > 0) {
+      html += `<tr><td style="padding-left:26px;font-weight:700;color:var(--accent)">Subtotal</td><td class="mono" style="font-weight:700;color:var(--accent)">$${total.toLocaleString()}</td></tr>`;
+      grand += total;
+    }
+  });
+  html += `<tr style="background:var(--text);color:#fff"><td style="font-weight:700;padding:12px 10px">Grand Total</td><td class="mono" style="font-weight:700;color:#fff;padding:12px 10px">$${grand.toLocaleString()}</td></tr>`;
+  html += '</tbody></table></div>';
+  document.getElementById('summaryContent').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// TRACKER
+// ═══════════════════════════════════════════════════
+
+function buildTrackerLines() {
+  // Build flat list of active budget lines
+  const lines = [];
+  CATS.forEach(c => {
+    OFFICES.forEach(o => {
+      const s = budgets[o.id][c.id];
+      const skip = (c.id==='kitchen'&&KITCHEN_SKIP.includes(o.id))||(c.id==='parking'&&!PARKING_ONLY.includes(o.id));
+      if (!s.enabled || skip || (s.amount||0) === 0) return;
+      const key = o.id+'__'+c.id;
+      const defRecip = DEFAULT_RECIPIENTS[o.id]?.[c.id] || null;
+      const isManual = NO_FORWARD_CATS.includes(c.id) || defRecip === null;
+      if (!trackerState[key]) {
+        trackerState[key] = {
+          shared: false,
+          recipient: defRecip || '',
+          isManual,
+          isFixed: c.id === 'parking' || (!isManual && defRecip !== null),
+        };
+      }
+      lines.push({ key, o, c, amt: s.amount||0 });
+    });
+  });
+
+  trackerReady = true;
+  renderTrackerTable(lines);
+}
+
+function renderTrackerTable(lines) {
+  if (!lines.length) {
+    document.getElementById('trackerContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--faint)">No budget lines to track.</div>';
+    return;
+  }
+
+  const total   = lines.reduce((s,l)=>s+l.amt,0);
+  const sharedN = lines.filter(l=>trackerState[l.key].shared).length;
+  const sharedAmt = lines.filter(l=>trackerState[l.key].shared).reduce((s,l)=>s+l.amt,0);
+  const pct = lines.length ? Math.round(sharedN/lines.length*100) : 0;
+
+  // Update header pill
+  const pill = document.getElementById('progressPill');
+  pill.textContent = `${sharedN} / ${lines.length} shared`;
+  pill.classList.toggle('show', true);
+  document.getElementById('tracker-badge').textContent = `${sharedN}/${lines.length}`;
+
+  // Group by category
+  let tableRows = '';
+  let lastCat = null;
+  lines.forEach(l => {
+    if (l.c.id !== lastCat) {
+      tableRows += `<tr class="cat-group-row"><td colspan="5">${l.c.emoji} ${l.c.name}</td></tr>`;
+      lastCat = l.c.id;
+    }
+    const ts = trackerState[l.key];
+    const isShared = ts.shared;
+    const noForward = NO_FORWARD_CATS.includes(l.c.id);
+
+    tableRows += `<tr class="${isShared?'shared-row':''}" id="trow_${l.key}">
+      <td class="check-wrap">
+        <div class="checker ${isShared?'checked':''}" onclick="toggleShared('${l.key}')"></div>
+      </td>
+      <td>
+        <div style="font-weight:500;font-size:12px">${l.o.flag} ${l.o.name}</div>
+        ${noForward?`<div style="font-size:10px;color:var(--faint);margin-top:1px">Recipient cannot forward</div>`:''}
+      </td>
+      <td>
+        <input class="recip-input ${ts.isManual?'manual':''}" id="recip_${l.key}"
+          value="${ts.recipient}"
+          placeholder="${ts.isManual?'Type recipient name…':'Auto-filled'}"
+          oninput="updateRecipient('${l.key}',this.value)"
+          ${!ts.isManual && ts.isFixed ? 'readonly' : ''}
+          ${isShared ? 'disabled' : ''}/>
+      </td>
+      <td class="mono ${isShared?'amt-shared':''}">$${l.amt.toLocaleString()}</td>
+      <td><span class="sbadge ${isShared?'shared':'pending'}">${isShared?'✓ Shared':'Pending'}</span></td>
+    </tr>`;
+  });
+
+  document.getElementById('trackerContent').innerHTML = `
+    <div class="tracker-header">
+      <div>
+        <div style="font-weight:700;font-size:15px">Sharing Tracker</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:2px">${document.getElementById('reqMonth').value} · Tick each line once transferred in Custodia</div>
+      </div>
+      <div class="tracker-progress">
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill" style="width:${pct}%"></div></div>
+        <span class="prog-label" id="progLabel">${sharedN} of ${lines.length} shared (USD $${sharedAmt.toLocaleString()})</span>
+      </div>
+    </div>
+
+    <div class="sum-totals">
+      <div class="sum-card">
+        <div class="sum-card-label">Total Requested</div>
+        <div class="sum-card-val">$${total.toLocaleString()}</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-card-label">Shared ✓</div>
+        <div class="sum-card-val green">$${sharedAmt.toLocaleString()}</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-card-label">Remaining</div>
+        <div class="sum-card-val amber">$${(total-sharedAmt).toLocaleString()}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table class="tracker-table">
+          <thead><tr>
+            <th style="width:40px">Done</th>
+            <th>Office</th>
+            <th>Recipient</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--faint)">
+      ✏️ Dashed border = type recipient manually. Solid border = auto-filled (editable). Greyed = fixed (Andy/parking).
+    </div>`;
+
+  // Store lines ref for refresh
+  window._trackerLines = lines;
+}
+
+function toggleShared(key) {
+  trackerState[key].shared = !trackerState[key].shared;
+  // Re-render to update row styling, progress, totals
+  renderTrackerTable(window._trackerLines);
+}
+
+function updateRecipient(key, val) {
+  trackerState[key].recipient = val;
+}
+
+// ═══════════════════════════════════════════════════
+// EMAIL
+// ═══════════════════════════════════════════════════
+
+function renderEmail() {
+  const month  = document.getElementById('reqMonth').value.trim();
+  const sender = document.getElementById('submittedBy').value.trim() || 'Surinya';
+  const recip  = document.getElementById('recipient').value.trim() || 'Custodia';
+  const notes  = document.getElementById('specialNotes').value.trim();
+
+  let grand = 0;
+  const catLines = CATS.map(c => {
+    const total = catTotal(c.id);
+    if (total === 0) return null;
+    grand += total;
+
+    if (c.id === 'parking') {
+      const amt = budgets['taipei']['parking'].amount || 400;
+      return `🅿️  Parking (Taipei) — USD $${amt.toLocaleString()}\n      📌 To be shared directly to Taipei Andy — USD $${amt.toLocaleString()}`;
+    }
+
+    const officeLines = OFFICES.filter(o => {
+      const skip = (c.id==='kitchen'&&KITCHEN_SKIP.includes(o.id))||(c.id==='parking'&&!PARKING_ONLY.includes(o.id));
+      return !skip && budgets[o.id][c.id].enabled && (budgets[o.id][c.id].amount||0) > 0;
+    }).map(o => {
+      const amt = budgets[o.id][c.id].amount||0;
+      const remark = c.id==='office_supply'&&OFFICE_SUPPLY_REMARKS[o.id] ? ` (${OFFICE_SUPPLY_REMARKS[o.id]})` : '';
+      return `      ${o.flag} ${o.name}: USD $${amt.toLocaleString()}${remark}`;
+    }).join('\n');
+
+    if (!officeLines) return null;
+    return `${c.emoji}  ${c.name} — USD $${total.toLocaleString()}\n${officeLines}`;
+  }).filter(Boolean).join('\n\n');
+
+  const notesBlock = notes ? `\n\nAdditional notes: ${notes}` : '';
+
+  const email =
+`Hi,
+
+I would like to request the routine Custodia budget for the APAC office as detailed below.
+
+${catLines}
+
+────────────────────────────────
+Total request: USD $${grand.toLocaleString()}${notesBlock}
+
+Please let me know if you have any questions.
+
+Best regards,
+${sender}
+Workplace & Experience Manager — APAC`;
+
+  document.getElementById('emailBody').textContent = email;
+}
+
+function copyEmail() {
+  navigator.clipboard.writeText(document.getElementById('emailBody').innerText)
+    .then(()=>showToast('✅ Copied to clipboard!'));
+}
+
+function openMail() {
+  const month = document.getElementById('reqMonth').value.trim();
+  const recip = document.getElementById('recipient').value.trim();
+  const to    = recip.includes('@') ? recip : '';
+  const subject = encodeURIComponent(`Monthly Budget Request — APAC ${month}`);
+  const body    = encodeURIComponent(document.getElementById('emailBody').innerText);
+  window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// Default month
+const _nm = new Date(new Date().getFullYear(), new Date().getMonth()+1, 1);
+document.getElementById('reqMonth').value = _nm.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+</script>
+</body>
+</html>
